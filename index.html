@@ -653,6 +653,11 @@
 
     function stopRecording() {
         isRecording = false;
+        // iOS에서 interim 결과만 오고 final이 안 오는 경우 화면에 보이는 텍스트를 저장
+        if (!transcript) {
+            const displayed = document.getElementById('transcriptText').textContent.trim();
+            if (displayed) transcript = displayed;
+        }
         if (recognition) {
             try { recognition.stop(); } catch(e) {}
             recognition = null;
@@ -679,7 +684,7 @@
 
         const inputText = currentMode === 'document'
             ? document.getElementById('koreanText').value.trim()
-            : transcript.trim();
+            : (transcript.trim() || document.getElementById('transcriptText').textContent.trim());
 
         if (!inputText) {
             showError(currentMode === 'document' ? '텍스트를 입력해 주세요.' : '먼저 녹음을 완료해 주세요.');
