@@ -653,11 +653,6 @@
 
     function stopRecording() {
         isRecording = false;
-        // iOS에서 interim 결과만 오고 final이 안 오는 경우 화면에 보이는 텍스트를 저장
-        if (!transcript) {
-            const displayed = document.getElementById('transcriptText').textContent.trim();
-            if (displayed) transcript = displayed;
-        }
         if (recognition) {
             try { recognition.stop(); } catch(e) {}
             recognition = null;
@@ -665,7 +660,8 @@
         document.getElementById('micBtn').classList.remove('recording');
         document.getElementById('micBtn').textContent = '🎤';
         document.getElementById('micHint').textContent = '버튼을 눌러 녹음 시작';
-        document.getElementById('micStatus').textContent = transcript
+        const hasText = transcript.trim() || document.getElementById('transcriptText').textContent.trim();
+        document.getElementById('micStatus').textContent = hasText
             ? '녹음 완료! 아래 버튼을 눌러 표현을 추출하세요.'
             : '녹음된 내용이 없어요. 다시 시도해 주세요.';
     }
@@ -682,9 +678,10 @@
         const apiKey = document.getElementById('apiKey').value.trim();
         if (!apiKey) { showError('Gemini API 키를 먼저 입력해 주세요.'); return; }
 
+        const micText = transcript.trim() || document.getElementById('transcriptText').textContent.trim();
         const inputText = currentMode === 'document'
             ? document.getElementById('koreanText').value.trim()
-            : (transcript.trim() || document.getElementById('transcriptText').textContent.trim());
+            : micText;
 
         if (!inputText) {
             showError(currentMode === 'document' ? '텍스트를 입력해 주세요.' : '먼저 녹음을 완료해 주세요.');
