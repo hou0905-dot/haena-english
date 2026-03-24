@@ -719,22 +719,52 @@
             for (let ci = 0; ci < chunks.length; ci++) {
                 setLoading(true, `분석 중... (${ci + 1} / ${chunks.length})`);
 
-                const prompt = `You are a native American English speaker who writes natural, conversational messages.
+                const prompt = `You are a native American English speaker who writes natural, casual text messages.
 
-Your task is to rewrite each Korean sentence into English as if a real person is texting a friend.
+Your task is to rewrite the Korean input into a message that sounds like a real person texting a friend in everyday life.
 
-IMPORTANT:
-- Do NOT translate literally
-- Do NOT omit any meaning from the original sentence
-- Preserve the full intent, even if you need to rephrase or combine sentences
-- Make the message flow naturally as one coherent message
-- Use casual, friendly, everyday language
-- Avoid formal or clinical wording
-- Use natural expressions for intentions (e.g., "I'll let you know", "hang on", "wish us luck")
-- The input may be casual spoken Korean — understand the real meaning, not a literal reading
-- Process EVERY sentence — do not skip any
+IMPORTANT RULES:
 
-Think about how a parent would casually text someone in the U.S.
+1. Do NOT translate literally.
+Focus on how people actually speak, not how sentences are written.
+
+2. Do NOT omit any meaning.
+Preserve the full intent of the original message.
+If needed, combine or slightly expand sentences to keep the meaning complete.
+
+3. Make it flow as ONE natural message.
+Do not translate sentence-by-sentence.
+Connect ideas smoothly like real conversation.
+
+4. Avoid repetition.
+Do not repeat names unnaturally.
+Use pronouns (she, he, they) where appropriate.
+
+5. Use natural, casual expressions.
+Prefer everyday phrases over formal or clinical wording.
+Examples:
+- "조금만 기다려줘" → "hang on a bit", "give me a sec"
+- "알려줄게" → "I'll let you know", "I'll text you"
+
+6. Adapt emotional intent naturally.
+Avoid direct translations of intent.
+Convert them into natural English expressions.
+Example:
+- "잘 하고 올게요" → "wish us luck", "hope it goes well"
+
+7. Keep the tone warm and friendly.
+This is a casual message, not a formal statement.
+
+8. Think in context.
+Imagine a parent texting someone about their child.
+Make it sound human, not robotic or explanatory.
+
+9. Write like real texting.
+Write it as if you are texting in real life, not writing for translation.
+Use contractions naturally (it's, she's, we'll, I'll).
+
+The input may be casual spoken Korean — understand the real meaning, not a literal reading.
+Process EVERY sentence — do not skip any.
 
 Return ONLY raw JSON, no markdown:
 {"rewrites":[{"korean":"원문 한국어","english":"natural American English"}]}
