@@ -471,9 +471,9 @@
 <div class="container">
 
     <header>
-        <div class="header-badge">육아 영어 표현 학습</div>
-        <h1>영어 표현 추출기</h1>
-        <p>한국어 텍스트에서 원어민 구어체 표현을 뽑아<br>12개월 아기 육아 예문과 함께 보여드려요</p>
+        <div class="header-badge">미국식 자연스러운 영어</div>
+        <h1>영어로 자연스럽게</h1>
+        <p>한국어로 말하면 실제 미국인이 쓰는<br>자연스러운 구어체 영어로 바꿔드려요</p>
     </header>
 
     <!-- API Key -->
@@ -522,7 +522,7 @@
     </div>
 
     <button class="generate-btn" id="generateBtn" onclick="generateExpressions()">
-        영어 표현 추출하기
+        자연스러운 영어로 바꾸기
     </button>
 
     <div id="errorContainer"></div>
@@ -530,14 +530,14 @@
     <div id="loadingDiv" style="display:none">
         <div class="loading">
             <div class="loading-dots"><span></span><span></span><span></span></div>
-            <p>유용한 영어 표현을 분석하고 있어요...</p>
+            <p>자연스러운 영어로 바꾸는 중이에요...</p>
         </div>
     </div>
 
     <div class="results-section" id="resultsSection" style="display:none">
         <div class="results-header">
             <div>
-                <div class="results-title">추출된 영어 표현</div>
+                <div class="results-title">자연스러운 영어</div>
                 <div class="results-count" id="resultsCount"></div>
             </div>
             <button class="pdf-btn" onclick="downloadPDF()">⬇ PDF 저장</button>
@@ -719,50 +719,22 @@
             for (let ci = 0; ci < chunks.length; ci++) {
                 setLoading(true, `분석 중... (${ci + 1} / ${chunks.length})`);
 
-                const prompt = `You are a native American English speaker helping a Korean parent learn real, everyday English.
+                const prompt = `You are a native American English speaker who specializes in natural, conversational phrasing.
 
-The Korean input below may be casual spoken Korean — informal, grammatically loose, or from speech recognition. Your job for each sentence:
-1. Figure out what the speaker ACTUALLY means (don't translate literally — understand the intent)
-2. Write it as natural American English — the way a real American parent would actually say it in conversation
-3. Pick out one useful English expression or phrase to learn
+Your task is NOT to translate literally, but to rewrite each sentence so that it sounds like something a real American would actually say in everyday conversation (text messages, casual speech).
 
-Examples of the quality I want:
+Guidelines:
+- Prioritize natural, idiomatic expressions over literal accuracy
+- You may change wording, structure, or tone if needed
+- Avoid formal or clinical words unless absolutely necessary
+- Keep it friendly, warm, and casual
+- Use contractions (e.g., "it's", "we'll", "she's")
+- If a sentence ends with an intention or feeling (e.g., "잘 하고 올게요"), convert it into a natural English expression (e.g., "wish us luck!", "hope it goes well!")
+- The input may be casual spoken Korean — understand the real meaning, not a literal reading
+- Process EVERY sentence — do not skip any
 
-Korean spoken: 우리 담이는 이제 내일이면 거의 영유아 발달 검진 받으러 갈거야
-Korean (cleaned): 담이 내일 발달 검진 받으러 가
-English: Dami has her developmental checkup tomorrow.
-expression: developmental checkup
-description: 영유아 발달 검진
-
-Korean spoken: 감당하기 힘든 슬픔이 밀려오기 시작했다
-Korean (spoken): 슬픔이 한꺼번에 확 밀려왔어
-English: It just hit me all at once — I couldn't handle it.
-expression: hit me all at once
-description: 감정이 갑자기 확 밀려오다
-
-Korean spoken: 마지막 장면 하나만으로 앞에 쌓아온 모든 시간은 제 역할을 다했다는 확신이 들었다
-Korean (spoken): 그 마지막 장면 하나로 다 worth it이었어
-English: That last scene alone made the whole thing worth it.
-expression: worth it
-description: 그럴 가치가 있다
-
-Korean spoken: 끝내 나도 같이 무너져 내리고 말았다
-Korean (spoken): 결국 나도 무너져버렸어
-English: I just broke down at the end.
-expression: break down
-description: 감정적으로 무너지다
-
----
-
-Now do the same for the text below. Rules:
-- The speaker may be talking loosely — understand the real meaning first, then write natural English
-- Write English the way real Americans actually talk: contractions, casual phrasing, no stiff textbook sentences
-- Don't force slang, but use natural spoken patterns
-- Extract one genuinely useful expression per sentence
-- Add 1 parenting example only if it fits naturally (infant/toddler context). Leave empty if forced.
-- Return ONLY raw JSON, no markdown
-
-{"expressions":[{"number":1,"korean":"구어체 한국어","english":"natural American English","expression":"key phrase","description":"짧은 설명","examples":[{"korean":"한글 예문","english":"English example"}]}]}
+Return ONLY raw JSON, no markdown:
+{"rewrites":[{"korean":"원문 한국어","english":"natural American English"}]}
 
 Korean text:
 ${chunks[ci]}`;
@@ -813,13 +785,13 @@ ${chunks[ci]}`;
                 }
                 if (!parsed) throw new Error('파싱 실패. 끝부분: ' + partial.slice(-100));
 
-                (parsed.expressions || []).forEach(expr => {
-                    expr.number = counter++;
-                    allExpressions.push(expr);
+                (parsed.rewrites || []).forEach(item => {
+                    item.number = counter++;
+                    allExpressions.push(item);
                 });
             }
 
-            if (allExpressions.length === 0) throw new Error('추출된 표현이 없어요. 다시 시도해 주세요.');
+            if (allExpressions.length === 0) throw new Error('결과가 없어요. 다시 시도해 주세요.');
             expressionsData = { expressions: allExpressions };
             renderResults(allExpressions);
 
@@ -835,36 +807,23 @@ ${chunks[ci]}`;
         const container = document.getElementById('expressionsList');
         container.innerHTML = '';
 
-        list.forEach((expr, i) => {
-            const examples = (expr.examples || []).map(ex => `
-                <div class="example-item">
-                    <div class="example-korean">${ex.korean}</div>
-                    <div class="example-english">${ex.english}</div>
-                </div>
-            `).join('');
-
+        list.forEach((item, i) => {
             const card = document.createElement('div');
             card.className = 'expression-card';
             card.style.animationDelay = `${i * 0.055}s`;
             card.innerHTML = `
                 <div class="expr-top">
-                    <div class="expr-number">${expr.number}</div>
+                    <div class="expr-number">${item.number}</div>
                     <div class="expr-main">
-                        <div class="expr-korean">${expr.korean}</div>
-                        <div class="expr-english">${expr.english}</div>
+                        <div class="expr-korean">${item.korean}</div>
+                        <div class="expr-english">${item.english}</div>
                     </div>
                 </div>
-                ${expr.expression ? `<div class="expr-description">💡 <b>${expr.expression}</b>${expr.description ? ' — ' + expr.description : ''}</div>` : (expr.description ? `<div class="expr-description">💡 ${expr.description}</div>` : '')}
-                ${examples ? `
-                <div class="examples-section">
-                    <div class="examples-label">예문</div>
-                    ${examples}
-                </div>` : ''}
             `;
             container.appendChild(card);
         });
 
-        document.getElementById('resultsCount').textContent = `총 ${list.length}개 표현`;
+        document.getElementById('resultsCount').textContent = `총 ${list.length}개 문장`;
         document.getElementById('resultsSection').style.display = 'block';
         setTimeout(() => {
             document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -880,35 +839,25 @@ ${chunks[ci]}`;
         el.style.cssText = 'font-family: Arial, Helvetica, sans-serif; padding: 28px; color: #1e1b4b; width: 680px;';
         el.innerHTML = `
             <div style="text-align:center; padding-bottom:22px; border-bottom:3px solid #6366f1; margin-bottom:26px;">
-                <h1 style="font-size:22px; font-weight:800; color:#6366f1; margin-bottom:6px;">영어 표현 학습 카드</h1>
-                <p style="color:#6b7280; font-size:12px;">생성일: ${date} &nbsp;|&nbsp; 원어민 구어체 + 육아 예문</p>
+                <h1 style="font-size:22px; font-weight:800; color:#6366f1; margin-bottom:6px;">미국식 자연스러운 영어</h1>
+                <p style="color:#6b7280; font-size:12px;">생성일: ${date}</p>
             </div>
-            ${list.map(expr => `
-            <div style="margin-bottom:18px; padding:16px 18px; border:1px solid #e5e7eb; border-radius:12px; page-break-inside:avoid;">
-                <div style="display:flex; align-items:flex-start; gap:10px; margin-bottom:10px;">
-                    <div style="flex-shrink:0; width:26px; height:26px; background:linear-gradient(135deg,#6366f1,#ec4899); color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800;">${expr.number}</div>
+            ${list.map(item => `
+            <div style="margin-bottom:14px; padding:14px 16px; border:1px solid #e5e7eb; border-radius:12px; page-break-inside:avoid;">
+                <div style="display:flex; align-items:flex-start; gap:10px;">
+                    <div style="flex-shrink:0; width:26px; height:26px; background:linear-gradient(135deg,#6366f1,#ec4899); color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800;">${item.number}</div>
                     <div>
-                        <div style="font-size:12px; color:#6b7280; margin-bottom:3px;">🇰🇷 ${expr.korean}</div>
-                        <div style="font-size:16px; font-weight:800; color:#1e1b4b;">🇺🇸 ${expr.english}</div>
+                        <div style="font-size:12px; color:#6b7280; margin-bottom:4px;">🇰🇷 ${item.korean}</div>
+                        <div style="font-size:16px; font-weight:800; color:#1e1b4b;">🇺🇸 ${item.english}</div>
                     </div>
                 </div>
-                ${expr.description ? `<div style="display:inline-block; background:#eef2ff; color:#6366f1; font-size:11px; font-weight:700; padding:4px 11px; border-radius:20px; margin-bottom:${(expr.examples||[]).length ? '12px' : '0'};">💡 ${expr.description}</div>` : ''}
-                ${(expr.examples||[]).length ? `
-                <div style="border-top:1px solid #f3f4f6; padding-top:10px; margin-top:${expr.description ? '0' : '10px'};">
-                    <div style="font-size:10px; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">예문</div>
-                    ${(expr.examples||[]).map(ex => `
-                    <div style="background:#fafafa; border-left:3px solid #818cf8; padding:8px 12px; border-radius:0 8px 8px 0; margin-bottom:6px;">
-                        <div style="font-size:11px; color:#6b7280; margin-bottom:3px;">🇰🇷 ${ex.korean}</div>
-                        <div style="font-size:12px; font-weight:700; color:#1e1b4b;">🇺🇸 ${ex.english}</div>
-                    </div>`).join('')}
-                </div>` : ''}
             </div>`).join('')}
             <div style="text-align:center; margin-top:20px; padding-top:14px; border-top:1px solid #e5e7eb; color:#9ca3af; font-size:11px;">
-                영어 표현 추출기
+                영어로 자연스럽게
             </div>
         `;
 
-        const filename = `영어표현_${date.replace(/\. /g, '-').replace('.', '')}.pdf`;
+        const filename = `미국식영어_${date.replace(/\. /g, '-').replace('.', '')}.pdf`;
         const opt = {
             margin: [10, 10, 10, 10],
             filename,
@@ -931,7 +880,7 @@ ${chunks[ci]}`;
         document.querySelector('.loading p').textContent = msg;
         const btn = document.getElementById('generateBtn');
         btn.disabled = on;
-        btn.textContent = on ? '분석 중...' : '영어 표현 추출하기';
+        btn.textContent = on ? '변환 중...' : '자연스러운 영어로 바꾸기';
     }
 
     function showError(msg) {
