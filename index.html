@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>영어 표현 추출기</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        :root {
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --primary-bg: #eef2ff;
+            --accent: #ec4899;
+            --text: #1e1b4b;
+            --text-muted: #6b7280;
+            --bg: #f5f4ff;
+            --card: #ffffff;
+            --border: #e5e7eb;
+            --success: #10b981;
+            --error: #ef4444;
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        html { height: -webkit-fill-available; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            padding: 16px 16px calc(40px + var(--safe-bottom));
+        }
+
+        .container { max-width: 760px; margin: 0 auto; }
+
+        /* Header */
+        header { text-align: center; padding: 36px 0 28px; }
+
+        .header-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary-bg), #fdf2f8);
+            border: 1px solid #c7d2fe;
+            color: var(--primary);
+            font-size: 12px;
+            font-weight: 700;
+            padding: 5px 14px;
+            border-radius: 20px;
+            letter-spacing: 0.04em;
+            margin-bottom: 14px;
+        }
+
+        header h1 {
+            font-size: clamp(1.5rem, 5vw, 2rem);
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary) 30%, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            line-height: 1.25;
+        }
+
+        header p { color: var(--text-muted); font-size: 14px; line-height: 1.65; }
+
+        /* API Key */
+        .api-key-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px 18px;
+            margin-bottom: 20px;
+        }
+
+        .api-key-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+
+        .api-key-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .api-key-card input {
+            flex: 1;
+            padding: 11px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            color: var(--text);
+            background: #fafafa;
+            min-width: 0;
+            -webkit-appearance: none;
+        }
+
+        .api-key-card input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+            background: #fff;
+        }
+
+        .save-badge {
+            font-size: 11px;
+            color: var(--success);
+            font-weight: 600;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .save-badge.show { opacity: 1; }
+
+        /* Mode Tabs */
+        .mode-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .mode-tab {
+            padding: 18px 12px;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            background: var(--card);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-muted);
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-appearance: none;
+        }
+
+        .mode-tab:active { transform: scale(0.97); }
+
+        .mode-tab.active {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, var(--primary-bg), #fdf2f8);
+            color: var(--primary);
+        }
+
+        .mode-tab .tab-icon { font-size: 26px; display: block; margin-bottom: 7px; }
+
+        /* Input Card */
+        .input-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 14px;
+        }
+
+        .input-section { display: none; }
+        .input-section.active { display: block; }
+
+        textarea {
+            width: 100%;
+            min-height: 240px;
+            padding: 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: inherit;
+            outline: none;
+            resize: vertical;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            line-height: 1.7;
+            color: var(--text);
+            background: #fafafa;
+            -webkit-appearance: none;
+        }
+
+        textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+            background: #fff;
+        }
+
+        textarea::placeholder { color: #c4b5fd; }
+
+        /* Mic Section */
+        .mic-area { text-align: center; padding: 8px 0 4px; }
+
+        .mic-btn {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            font-size: 2.6rem;
+            cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: 0 6px 24px rgba(99,102,241,0.35);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-appearance: none;
+        }
+
+        .mic-btn:active { transform: scale(0.94); }
+
+        .mic-btn.recording {
+            animation: mic-pulse 1.4s ease-in-out infinite;
+            background: linear-gradient(135deg, #ef4444, #f97316);
+        }
+
+        @keyframes mic-pulse {
+            0%   { box-shadow: 0 0 0 0   rgba(239,68,68,0.5); }
+            60%  { box-shadow: 0 0 0 20px rgba(239,68,68,0);   }
+            100% { box-shadow: 0 0 0 0   rgba(239,68,68,0);   }
+        }
+
+        .mic-hint {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #a78bfa;
+            font-weight: 500;
+        }
+
+        .mic-status {
+            margin-top: 12px;
+            font-size: 14px;
+            color: var(--text-muted);
+            min-height: 20px;
+            font-weight: 500;
+        }
+
+        .transcript-box {
+            margin-top: 14px;
+            padding: 14px 16px;
+            background: var(--primary-bg);
+            border: 1px solid #c7d2fe;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--text);
+            display: none;
+            text-align: left;
+        }
+
+        .transcript-box.show { display: block; }
+
+        .transcript-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .transcript-clear {
+            font-size: 11px;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 2px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: white;
+        }
+
+        /* Generate Button */
+        .generate-btn {
+            width: 100%;
+            padding: 17px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: 0 4px 20px rgba(99,102,241,0.3);
+            letter-spacing: 0.01em;
+            -webkit-appearance: none;
+        }
+
+        .generate-btn:active:not(:disabled) { transform: scale(0.98); }
+        .generate-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+        /* Loading */
+        .loading { text-align: center; padding: 48px 20px; }
+
+        .loading-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .loading-dots span {
+            width: 10px;
+            height: 10px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: dot-bounce 1.2s ease-in-out infinite;
+        }
+
+        .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes dot-bounce {
+            0%,80%,100% { transform: scale(0.7); opacity: 0.4; }
+            40%          { transform: scale(1.1); opacity: 1; }
+        }
+
+        .loading p { color: var(--primary); font-size: 14px; font-weight: 600; }
+
+        /* Error */
+        .error-msg {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: var(--error);
+            padding: 13px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            margin-top: 14px;
+            line-height: 1.5;
+        }
+
+        /* Results */
+        .results-section { margin-top: 28px; }
+
+        .results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+            gap: 12px;
+        }
+
+        .results-title { font-size: 1.05rem; font-weight: 800; }
+        .results-count { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+        .pdf-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 12px 18px;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+            -webkit-appearance: none;
+        }
+
+        .pdf-btn:active { transform: scale(0.96); }
+
+        .ios-pdf-notice {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 14px;
+            display: none;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 10px;
+            padding: 10px 14px;
+        }
+
+        /* Expression Card */
+        .expression-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 22px 20px;
+            margin-bottom: 14px;
+            animation: card-in 0.3s ease both;
+        }
+
+        @keyframes card-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .expr-top {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .expr-number {
+            flex-shrink: 0;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            border-radius: 50%;
+            font-size: 13px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 3px;
+        }
+
+        .expr-main { flex: 1; min-width: 0; }
+
+        .expr-korean { font-size: 13px; color: var(--text-muted); margin-bottom: 5px; }
+
+        .expr-english {
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            font-weight: 800;
+            color: var(--text);
+            word-break: break-word;
+        }
+
+        .expr-description {
+            display: inline-block;
+            background: var(--primary-bg);
+            color: var(--primary);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 5px 12px;
+            border-radius: 20px;
+            margin-bottom: 14px;
+            line-height: 1.4;
+        }
+
+        .examples-section { border-top: 1px solid #f3f4f6; padding-top: 14px; }
+
+        .examples-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 10px;
+        }
+
+        .example-item {
+            padding: 11px 14px;
+            background: #fafafa;
+            border-left: 3px solid var(--primary-light);
+            border-radius: 0 10px 10px 0;
+            margin-bottom: 8px;
+        }
+
+        .example-item:last-child { margin-bottom: 0; }
+        .example-korean { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+        .example-english { font-size: 13px; font-weight: 700; color: var(--text); }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <header>
+        <div class="header-badge">육아 영어 표현 학습</div>
+        <h1>영어 표현 추출기</h1>
+        <p>한국어 텍스트에서 원어민 구어체 표현을 뽑아<br>12개월 아기 육아 예문과 함께 보여드려요</p>
+    </header>
+
+    <!-- API Key -->
+    <div class="api-key-card">
+        <div class="api-key-label">Gemini API Key</div>
+        <div class="api-key-row">
+            <input type="password" id="apiKey" placeholder="AIzaSy..." autocomplete="off" />
+            <span class="save-badge" id="saveBadge">저장됨</span>
+        </div>
+    </div>
+
+    <!-- Mode Tabs -->
+    <div class="mode-tabs">
+        <button class="mode-tab active" id="tab-document" onclick="switchMode('document')">
+            <span class="tab-icon">📄</span>
+            문서 입력
+        </button>
+        <button class="mode-tab" id="tab-mic" onclick="switchMode('mic')">
+            <span class="tab-icon">🎤</span>
+            마이크 녹음
+        </button>
+    </div>
+
+    <!-- Input Card -->
+    <div class="input-card">
+        <div class="input-section active" id="documentSection">
+            <textarea id="koreanText"
+                placeholder="여기에 한국어 텍스트를 붙여넣으세요&#10;&#10;예: 오늘 아이가 드디어 첫 발걸음을 뗐어요. 넘어지지 않게 잘 잡아줬는데 정말 뿌듯했어요.">
+            </textarea>
+        </div>
+
+        <div class="input-section" id="micSection">
+            <div class="mic-area">
+                <button class="mic-btn" id="micBtn" onclick="toggleRecording()">🎤</button>
+                <p class="mic-hint" id="micHint">버튼을 눌러 녹음 시작</p>
+                <p class="mic-status" id="micStatus"></p>
+                <div class="transcript-box" id="transcriptBox">
+                    <div class="transcript-label">
+                        <span>인식된 텍스트</span>
+                        <button class="transcript-clear" onclick="clearTranscript()">지우기</button>
+                    </div>
+                    <div id="transcriptText"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="generate-btn" id="generateBtn" onclick="generateExpressions()">
+        영어 표현 추출하기
+    </button>
+
+    <div id="errorContainer"></div>
+
+    <div id="loadingDiv" style="display:none">
+        <div class="loading">
+            <div class="loading-dots"><span></span><span></span><span></span></div>
+            <p>유용한 영어 표현을 분석하고 있어요...</p>
+        </div>
+    </div>
+
+    <div class="results-section" id="resultsSection" style="display:none">
+        <div class="results-header">
+            <div>
+                <div class="results-title">추출된 영어 표현</div>
+                <div class="results-count" id="resultsCount"></div>
+            </div>
+            <button class="pdf-btn" onclick="downloadPDF()">⬇ PDF 저장</button>
+        </div>
+        <p class="ios-pdf-notice" id="iosPdfNotice">
+            iPad에서는 PDF가 새 탭으로 열려요. 공유(&#x2197;) 버튼으로 저장하세요.
+        </p>
+        <div id="expressionsList"></div>
+    </div>
+
+</div>
+
+<script>
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+        || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+    let currentMode = 'document';
+    let recognition = null;
+    let isRecording = false;
+    let transcript = '';
+    let expressionsData = [];
+
+    // Restore API key
+    const savedKey = localStorage.getItem('engl_extractor_apikey');
+    if (savedKey) document.getElementById('apiKey').value = savedKey;
+
+    let saveTimer;
+    document.getElementById('apiKey').addEventListener('input', function () {
+        localStorage.setItem('engl_extractor_apikey', this.value);
+        const badge = document.getElementById('saveBadge');
+        badge.classList.add('show');
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => badge.classList.remove('show'), 1500);
+    });
+
+    if (isIOS) document.getElementById('iosPdfNotice').style.display = 'block';
+
+    /* ── Mode Switch ── */
+    function switchMode(mode) {
+        currentMode = mode;
+        document.getElementById('tab-document').classList.toggle('active', mode === 'document');
+        document.getElementById('tab-mic').classList.toggle('active', mode === 'mic');
+        document.getElementById('documentSection').classList.toggle('active', mode === 'document');
+        document.getElementById('micSection').classList.toggle('active', mode === 'mic');
+        if (mode === 'document' && isRecording) stopRecording();
+    }
+
+    /* ── Microphone ── */
+    function toggleRecording() {
+        isRecording ? stopRecording() : startRecording();
+    }
+
+    function startRecording() {
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) {
+            showError('음성 인식을 지원하지 않는 브라우저예요. iPad는 Safari를 사용해 주세요.');
+            return;
+        }
+
+        recognition = new SR();
+        recognition.lang = 'ko-KR';
+        recognition.continuous = !isIOS; // iOS Safari는 continuous 미지원
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 1;
+
+        recognition.onstart = () => {
+            isRecording = true;
+            document.getElementById('micBtn').classList.add('recording');
+            document.getElementById('micBtn').textContent = '⏹';
+            document.getElementById('micHint').textContent = '탭하면 녹음 중지';
+            document.getElementById('micStatus').textContent = '🔴 녹음 중... 말씀해 주세요';
+        };
+
+        recognition.onresult = (e) => {
+            let finalChunk = '', interim = '';
+            for (let i = e.resultIndex; i < e.results.length; i++) {
+                e.results[i].isFinal
+                    ? (finalChunk += e.results[i][0].transcript)
+                    : (interim += e.results[i][0].transcript);
+            }
+            transcript += finalChunk;
+            document.getElementById('transcriptText').textContent = transcript + interim;
+            document.getElementById('transcriptBox').classList.add('show');
+        };
+
+        recognition.onerror = (e) => {
+            if (e.error === 'no-speech') return;
+            if (e.error === 'not-allowed') {
+                showError('마이크 권한이 필요해요. 설정 > Safari > 마이크에서 허용해 주세요.');
+            } else {
+                showError('음성 인식 오류: ' + e.error);
+            }
+            stopRecording();
+        };
+
+        // iOS는 continuous=false이므로 onend에서 재시작
+        recognition.onend = () => {
+            if (isRecording && isIOS) {
+                setTimeout(() => {
+                    if (isRecording) {
+                        try { recognition.start(); } catch(err) {}
+                    }
+                }, 120);
+            }
+        };
+
+        try {
+            recognition.start();
+        } catch(e) {
+            showError('마이크를 시작할 수 없어요: ' + e.message);
+        }
+    }
+
+    function stopRecording() {
+        isRecording = false;
+        if (recognition) {
+            try { recognition.stop(); } catch(e) {}
+            recognition = null;
+        }
+        document.getElementById('micBtn').classList.remove('recording');
+        document.getElementById('micBtn').textContent = '🎤';
+        document.getElementById('micHint').textContent = '버튼을 눌러 녹음 시작';
+        document.getElementById('micStatus').textContent = transcript
+            ? '녹음 완료! 아래 버튼을 눌러 표현을 추출하세요.'
+            : '녹음된 내용이 없어요. 다시 시도해 주세요.';
+    }
+
+    function clearTranscript() {
+        transcript = '';
+        document.getElementById('transcriptText').textContent = '';
+        document.getElementById('transcriptBox').classList.remove('show');
+        document.getElementById('micStatus').textContent = '';
+    }
+
+    /* ── Generate ── */
+    async function generateExpressions() {
+        const apiKey = document.getElementById('apiKey').value.trim();
+        if (!apiKey) { showError('Gemini API 키를 먼저 입력해 주세요.'); return; }
+
+        const inputText = currentMode === 'document'
+            ? document.getElementById('koreanText').value.trim()
+            : transcript.trim();
+
+        if (!inputText) {
+            showError(currentMode === 'document' ? '텍스트를 입력해 주세요.' : '먼저 녹음을 완료해 주세요.');
+            return;
+        }
+
+        localStorage.setItem('engl_extractor_apikey', apiKey);
+        setLoading(true, '사용 가능한 모델 확인 중...');
+        clearError();
+        document.getElementById('resultsSection').style.display = 'none';
+
+        try {
+            // 사용 가능한 모델 자동 탐색
+            const modelCandidates = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-1.0-pro', 'gemini-pro'];
+            let model = 'gemini-1.5-flash';
+            const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+            if (listRes.ok) {
+                const listData = await listRes.json();
+                const available = (listData.models || [])
+                    .filter(m => (m.supportedGenerationMethods || []).includes('generateContent'))
+                    .map(m => m.name.replace('models/', ''));
+                model = modelCandidates.find(c => available.includes(c)) || available[0] || model;
+            }
+
+            // 텍스트를 2000자 단위 청크로 분할
+            const CHUNK_SIZE = 2000;
+            const chunks = [];
+            for (let i = 0; i < inputText.length; i += CHUNK_SIZE) {
+                chunks.push(inputText.slice(i, i + CHUNK_SIZE));
+            }
+
+            const allExpressions = [];
+            let counter = 1;
+
+            for (let ci = 0; ci < chunks.length; ci++) {
+                setLoading(true, `분석 중... (${ci + 1} / ${chunks.length})`);
+
+                const prompt = `You are a native English speaker who translates Korean sentences into the way real people actually talk.
+
+Here are examples of the quality I want:
+
+Korean: 감당하기 힘든 슬픔이 밀려오기 시작했다.
+Korean (spoken): 감당하기 힘든 슬픔이 한꺼번에 밀려왔어.
+English: It hit me all at once. I couldn't handle it.
+expression: hit me
+description: 감정이 갑자기 확 밀려오다
+
+Korean: 마지막 장면 하나만으로 앞에 쌓아온 모든 시간은 제 역할을 다했다는 확신이 들었다.
+Korean (spoken): 그 마지막 장면 하나로 다 worth it이었어.
+English: That last scene alone made everything worth it.
+expression: worth it
+description: 그럴 가치가 있다
+
+Korean: 끝내 나도 같이 무너져 내리고 말았다.
+Korean (spoken): 결국 나도 무너져버렸어.
+English: I just broke down in the end.
+expression: break down
+description: 감정적으로 무너지다
+
+---
+
+Now do the same for the text below. Rules:
+- Extract expressions from EVERY sentence — do not skip or merge sentences
+- Translate faithfully and close to what was actually said, just in natural spoken English
+- It's okay if the English sentence is longer — don't over-compress
+- Use colloquial expressions where they fit naturally, but don't force them
+- Rephrase Korean to sound like casual spoken Korean too
+- Add 1 parenting example only if it fits naturally (12-month-old baby context). Leave empty if forced.
+- Return ONLY raw JSON, no markdown
+
+{"expressions":[{"number":1,"korean":"구어체 한국어","english":"short natural English","expression":"key phrase","description":"짧은 설명","examples":[{"korean":"한글 예문","english":"English example"}]}]}
+
+Korean text:
+${chunks[ci]}`;
+
+                const res = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            generationConfig: { temperature: 0.7, maxOutputTokens: 8192 }
+                        })
+                    }
+                );
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error?.message || `HTTP ${res.status}`);
+                }
+
+                const data = await res.json();
+                const raw = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!raw) throw new Error('응답이 비어있어요. 모델: ' + model);
+
+                let cleaned = raw
+                    .replace(/```json\s*/gi, '').replace(/```\s*/g, '')
+                    .replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'")
+                    .replace(/\r?\n/g, ' ').replace(/\t/g, ' ').trim();
+
+                const firstBrace = cleaned.indexOf('{');
+                if (firstBrace === -1) throw new Error('JSON 없음. 응답: ' + cleaned.substring(0, 200));
+                const partial = cleaned.slice(firstBrace).replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
+
+                // 잘린 JSON 자동 복구 (문자열 중간에 잘린 경우 포함)
+                let parsed = null;
+                const suffixes = ['', '}', ']}', '}]}', '"', '"}', '"]}', '"}]}', '"}]}'];
+                for (const s of suffixes) {
+                    try { parsed = JSON.parse(partial + s); break; } catch(e) {}
+                }
+                // 그래도 실패하면 마지막 완전한 표현까지만 잘라서 시도
+                if (!parsed) {
+                    const lastComplete = partial.lastIndexOf('},');
+                    if (lastComplete > 0) {
+                        const trimmed = partial.slice(0, lastComplete + 1) + ']}';
+                        try { parsed = JSON.parse(trimmed); } catch(e) {}
+                    }
+                }
+                if (!parsed) throw new Error('파싱 실패. 끝부분: ' + partial.slice(-100));
+
+                (parsed.expressions || []).forEach(expr => {
+                    expr.number = counter++;
+                    allExpressions.push(expr);
+                });
+            }
+
+            if (allExpressions.length === 0) throw new Error('추출된 표현이 없어요. 다시 시도해 주세요.');
+            expressionsData = { expressions: allExpressions };
+            renderResults(allExpressions);
+
+        } catch (e) {
+            showError('오류: ' + e.message);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    /* ── Render ── */
+    function renderResults(list) {
+        const container = document.getElementById('expressionsList');
+        container.innerHTML = '';
+
+        list.forEach((expr, i) => {
+            const examples = (expr.examples || []).map(ex => `
+                <div class="example-item">
+                    <div class="example-korean">${ex.korean}</div>
+                    <div class="example-english">${ex.english}</div>
+                </div>
+            `).join('');
+
+            const card = document.createElement('div');
+            card.className = 'expression-card';
+            card.style.animationDelay = `${i * 0.055}s`;
+            card.innerHTML = `
+                <div class="expr-top">
+                    <div class="expr-number">${expr.number}</div>
+                    <div class="expr-main">
+                        <div class="expr-korean">${expr.korean}</div>
+                        <div class="expr-english">${expr.english}</div>
+                    </div>
+                </div>
+                ${expr.expression ? `<div class="expr-description">💡 <b>${expr.expression}</b>${expr.description ? ' — ' + expr.description : ''}</div>` : (expr.description ? `<div class="expr-description">💡 ${expr.description}</div>` : '')}
+                ${examples ? `
+                <div class="examples-section">
+                    <div class="examples-label">예문</div>
+                    ${examples}
+                </div>` : ''}
+            `;
+            container.appendChild(card);
+        });
+
+        document.getElementById('resultsCount').textContent = `총 ${list.length}개 표현`;
+        document.getElementById('resultsSection').style.display = 'block';
+        setTimeout(() => {
+            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+    }
+
+    /* ── PDF ── */
+    function downloadPDF() {
+        const list = expressionsData.expressions || [];
+        const date = new Date().toLocaleDateString('ko-KR');
+
+        const el = document.createElement('div');
+        el.style.cssText = 'font-family: Arial, Helvetica, sans-serif; padding: 28px; color: #1e1b4b; width: 680px;';
+        el.innerHTML = `
+            <div style="text-align:center; padding-bottom:22px; border-bottom:3px solid #6366f1; margin-bottom:26px;">
+                <h1 style="font-size:22px; font-weight:800; color:#6366f1; margin-bottom:6px;">영어 표현 학습 카드</h1>
+                <p style="color:#6b7280; font-size:12px;">생성일: ${date} &nbsp;|&nbsp; 원어민 구어체 + 육아 예문</p>
+            </div>
+            ${list.map(expr => `
+            <div style="margin-bottom:18px; padding:16px 18px; border:1px solid #e5e7eb; border-radius:12px; page-break-inside:avoid;">
+                <div style="display:flex; align-items:flex-start; gap:10px; margin-bottom:10px;">
+                    <div style="flex-shrink:0; width:26px; height:26px; background:linear-gradient(135deg,#6366f1,#ec4899); color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800;">${expr.number}</div>
+                    <div>
+                        <div style="font-size:12px; color:#6b7280; margin-bottom:3px;">🇰🇷 ${expr.korean}</div>
+                        <div style="font-size:16px; font-weight:800; color:#1e1b4b;">🇺🇸 ${expr.english}</div>
+                    </div>
+                </div>
+                ${expr.description ? `<div style="display:inline-block; background:#eef2ff; color:#6366f1; font-size:11px; font-weight:700; padding:4px 11px; border-radius:20px; margin-bottom:${(expr.examples||[]).length ? '12px' : '0'};">💡 ${expr.description}</div>` : ''}
+                ${(expr.examples||[]).length ? `
+                <div style="border-top:1px solid #f3f4f6; padding-top:10px; margin-top:${expr.description ? '0' : '10px'};">
+                    <div style="font-size:10px; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">예문</div>
+                    ${(expr.examples||[]).map(ex => `
+                    <div style="background:#fafafa; border-left:3px solid #818cf8; padding:8px 12px; border-radius:0 8px 8px 0; margin-bottom:6px;">
+                        <div style="font-size:11px; color:#6b7280; margin-bottom:3px;">🇰🇷 ${ex.korean}</div>
+                        <div style="font-size:12px; font-weight:700; color:#1e1b4b;">🇺🇸 ${ex.english}</div>
+                    </div>`).join('')}
+                </div>` : ''}
+            </div>`).join('')}
+            <div style="text-align:center; margin-top:20px; padding-top:14px; border-top:1px solid #e5e7eb; color:#9ca3af; font-size:11px;">
+                영어 표현 추출기
+            </div>
+        `;
+
+        const filename = `영어표현_${date.replace(/\. /g, '-').replace('.', '')}.pdf`;
+        const opt = {
+            margin: [10, 10, 10, 10],
+            filename,
+            image: { type: 'jpeg', quality: 0.97 },
+            html2canvas: { scale: 2.2, useCORS: true, logging: false },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        if (isIOS) {
+            // iPad: blob URL을 새 탭으로 열기 (다운로드 미지원)
+            html2pdf().from(el).set(opt).outputPdf('bloburl').then(url => window.open(url, '_blank'));
+        } else {
+            html2pdf().from(el).set(opt).save();
+        }
+    }
+
+    /* ── Helpers ── */
+    function setLoading(on, msg = '유용한 영어 표현을 분석하고 있어요...') {
+        document.getElementById('loadingDiv').style.display = on ? 'block' : 'none';
+        document.querySelector('.loading p').textContent = msg;
+        const btn = document.getElementById('generateBtn');
+        btn.disabled = on;
+        btn.textContent = on ? '분석 중...' : '영어 표현 추출하기';
+    }
+
+    function showError(msg) {
+        document.getElementById('errorContainer').innerHTML = `<div class="error-msg">⚠️ ${msg}</div>`;
+    }
+
+    function clearError() {
+        document.getElementById('errorContainer').innerHTML = '';
+    }
+</script>
+</body>
+</html>
