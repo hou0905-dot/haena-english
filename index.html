@@ -717,40 +717,50 @@
             for (let ci = 0; ci < chunks.length; ci++) {
                 setLoading(true, `분석 중... (${ci + 1} / ${chunks.length})`);
 
-                const prompt = `You are a native English speaker who translates Korean sentences into the way real people actually talk.
+                const prompt = `You are a native American English speaker helping a Korean parent learn real, everyday English.
 
-Here are examples of the quality I want:
+The Korean input below may be casual spoken Korean — informal, grammatically loose, or from speech recognition. Your job for each sentence:
+1. Figure out what the speaker ACTUALLY means (don't translate literally — understand the intent)
+2. Write it as natural American English — the way a real American parent would actually say it in conversation
+3. Pick out one useful English expression or phrase to learn
 
-Korean: 감당하기 힘든 슬픔이 밀려오기 시작했다.
-Korean (spoken): 감당하기 힘든 슬픔이 한꺼번에 밀려왔어.
-English: It hit me all at once. I couldn't handle it.
-expression: hit me
+Examples of the quality I want:
+
+Korean spoken: 우리 담이는 이제 내일이면 거의 영유아 발달 검진 받으러 갈거야
+Korean (cleaned): 담이 내일 발달 검진 받으러 가
+English: Dami has her developmental checkup tomorrow.
+expression: developmental checkup
+description: 영유아 발달 검진
+
+Korean spoken: 감당하기 힘든 슬픔이 밀려오기 시작했다
+Korean (spoken): 슬픔이 한꺼번에 확 밀려왔어
+English: It just hit me all at once — I couldn't handle it.
+expression: hit me all at once
 description: 감정이 갑자기 확 밀려오다
 
-Korean: 마지막 장면 하나만으로 앞에 쌓아온 모든 시간은 제 역할을 다했다는 확신이 들었다.
-Korean (spoken): 그 마지막 장면 하나로 다 worth it이었어.
-English: That last scene alone made everything worth it.
+Korean spoken: 마지막 장면 하나만으로 앞에 쌓아온 모든 시간은 제 역할을 다했다는 확신이 들었다
+Korean (spoken): 그 마지막 장면 하나로 다 worth it이었어
+English: That last scene alone made the whole thing worth it.
 expression: worth it
 description: 그럴 가치가 있다
 
-Korean: 끝내 나도 같이 무너져 내리고 말았다.
-Korean (spoken): 결국 나도 무너져버렸어.
-English: I just broke down in the end.
+Korean spoken: 끝내 나도 같이 무너져 내리고 말았다
+Korean (spoken): 결국 나도 무너져버렸어
+English: I just broke down at the end.
 expression: break down
 description: 감정적으로 무너지다
 
 ---
 
 Now do the same for the text below. Rules:
-- Extract expressions from EVERY sentence — do not skip or merge sentences
-- Translate faithfully and close to what was actually said, just in natural spoken English
-- It's okay if the English sentence is longer — don't over-compress
-- Use colloquial expressions where they fit naturally, but don't force them
-- Rephrase Korean to sound like casual spoken Korean too
-- Add 1 parenting example only if it fits naturally (12-month-old baby context). Leave empty if forced.
+- The speaker may be talking loosely — understand the real meaning first, then write natural English
+- Write English the way real Americans actually talk: contractions, casual phrasing, no stiff textbook sentences
+- Don't force slang, but use natural spoken patterns
+- Extract one genuinely useful expression per sentence
+- Add 1 parenting example only if it fits naturally (infant/toddler context). Leave empty if forced.
 - Return ONLY raw JSON, no markdown
 
-{"expressions":[{"number":1,"korean":"구어체 한국어","english":"short natural English","expression":"key phrase","description":"짧은 설명","examples":[{"korean":"한글 예문","english":"English example"}]}]}
+{"expressions":[{"number":1,"korean":"구어체 한국어","english":"natural American English","expression":"key phrase","description":"짧은 설명","examples":[{"korean":"한글 예문","english":"English example"}]}]}
 
 Korean text:
 ${chunks[ci]}`;
