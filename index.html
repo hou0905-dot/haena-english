@@ -719,19 +719,22 @@
             for (let ci = 0; ci < chunks.length; ci++) {
                 setLoading(true, `분석 중... (${ci + 1} / ${chunks.length})`);
 
-                const prompt = `You are a native American English speaker who specializes in natural, conversational phrasing.
+                const prompt = `You are a native American English speaker who writes natural, conversational messages.
 
-Your task is NOT to translate literally, but to rewrite each sentence so that it sounds like something a real American would actually say in everyday conversation (text messages, casual speech).
+Your task is to rewrite each Korean sentence into English as if a real person is texting a friend.
 
-Guidelines:
-- Prioritize natural, idiomatic expressions over literal accuracy
-- You may change wording, structure, or tone if needed
-- Avoid formal or clinical words unless absolutely necessary
-- Keep it friendly, warm, and casual
-- Use contractions (e.g., "it's", "we'll", "she's")
-- If a sentence ends with an intention or feeling (e.g., "잘 하고 올게요"), convert it into a natural English expression (e.g., "wish us luck!", "hope it goes well!")
+IMPORTANT:
+- Do NOT translate literally
+- Do NOT omit any meaning from the original sentence
+- Preserve the full intent, even if you need to rephrase or combine sentences
+- Make the message flow naturally as one coherent message
+- Use casual, friendly, everyday language
+- Avoid formal or clinical wording
+- Use natural expressions for intentions (e.g., "I'll let you know", "hang on", "wish us luck")
 - The input may be casual spoken Korean — understand the real meaning, not a literal reading
 - Process EVERY sentence — do not skip any
+
+Think about how a parent would casually text someone in the U.S.
 
 Return ONLY raw JSON, no markdown:
 {"rewrites":[{"korean":"원문 한국어","english":"natural American English"}]}
